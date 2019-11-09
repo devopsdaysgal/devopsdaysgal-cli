@@ -14,8 +14,8 @@
 # under the License.
 #
 
-
 import abc
+import logging
 
 import configargparse
 
@@ -23,6 +23,7 @@ import configargparse
 class DodgCommand(abc.ABC):
     def __init__(self, parser: configargparse.ArgumentParser):
         self.parser = parser.add_parser(self.name)
+        self.logger = logging.getLogger(f"{__file__}.{self.__class__.__name__}")
 
     @abc.abstractmethod
     def add_args(self):
