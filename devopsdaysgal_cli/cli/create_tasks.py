@@ -70,6 +70,19 @@ class Command(cli.DodgCommand):
         )
 
     def run(self, options):
+        if hasattr(options.agenda, "read"):
+            self.logger.debug("Input text is via stdin")
+            if options.agenda.isatty():
+                if platform.system() == "Windows":
+                    key = "CTRL+Z"
+                else:
+                    key = "CTRL+D"
+                self.logger.warning(f"Reading agenda text from STDIN. Press {key} to end input")
+
+            tasklist = options.agenda.read()
+        else:
+            tasklist = options.agenda
+
         client = TrelloClient(
             api_key=options.trello_key, api_secret=options.trello_secret,
         )
@@ -90,17 +103,25 @@ class Command(cli.DodgCommand):
                 f"Failed to locate list '{self.default_board_list}' to add tasks to from agenda"
             )
 
-        if hasattr(options.agenda, "read"):
-            self.logger.debug("Input text is via stdin")
-            if options.agenda.isatty():
-                if platform.system() == "Windows":
-                    key = "CTRL+Z"
-                else:
-                    key = "CTRL+D"
-                self.logger.warning(f"Reading agenda text from STDIN. Press {key} to end input")
+        board_members = {
+            member.id: member.full_name for member in conference_board.get_members()
+        }
+        board_members_by_name = {
+            name: id for id, name in board_members.items()
+        }
 
-            tasklist = options.agenda.read()
-        else:
-            tasklist = options.agenda
+        for task in tasklist.split("\n"):
+            assignee, task_name = task.partition(":", 1)
+            # first check to see if we need to add the task
+            existing_cards = client.search(
+                query=task_name, partial_match=True, models=["cards"], board_ids=[conference_board.id]
+            )
 
-        tasks = tasklist.split("\n")
+            if existing_cards:
+                print("Is this covered by one of the following cards:")
+                for card in existing_cards:
+                    print(card.name)
+
+            if assignee not in board_members_by_name:
+                # need to ask who will assigned this
+                pass
