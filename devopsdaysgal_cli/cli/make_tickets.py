@@ -129,10 +129,13 @@ class Command(cli.DodgCommand):
         if not rsvp_list:
             if options.dry_run:
                 rsvp_list = {'slug': '<dry-run-not-created>'}
-                rsvp_invitations = []
             else:
                 rsvp_list = self._post("rsvp_lists", {"rsvp_list": {"title": options.name}})
-                rsvp_invitations = self._get(f"rsvp_lists/{rsvp_list['slug']}/release_invitations")
+
+        if options.dry_run:
+            rsvp_invitations = []
+        else:
+            rsvp_invitations = self._get(f"rsvp_lists/{rsvp_list['slug']}/release_invitations")
 
         releases = {
             release["title"].lower(): release for release in self._get("releases")
