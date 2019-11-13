@@ -130,7 +130,8 @@ class Command(cli.DodgCommand):
             if options.dry_run:
                 rsvp_list = {'slug': '<dry-run-not-created>'}
             else:
-                rsvp_list = self._post("rsvp_lists", {"rsvp_list": {"title": options.name}})
+                response = self._post("rsvp_lists", {"rsvp_list": {"title": options.name}})
+                rsvp_list = response["rsvp_list"]
 
         if options.dry_run:
             rsvp_invitations = []
